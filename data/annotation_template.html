@@ -1,0 +1,1817 @@
+<!-- You must include this JavaScript file -->
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+
+    var current_page = 1;
+    max_answer_length = 15;
+    answer_length = 0;
+    num_reason_selected = 0;
+    var selected = [];
+    var reason_selected = false;
+    var validation_yes_selected = false;
+    var summary_sentence_selected = false;
+
+    function checkRoleSelection(){
+        document.getElementById('next').disabled = false;
+        for (let i = 0; i < answer_length; i++){
+            if (selected[i] == false){
+                document.getElementById('next').disabled = true;
+            }
+        }
+    }
+    
+    function displayAnnotationBox(){
+        if (current_page == 1) {
+            document.getElementById('sentence_annotation').style.display = 'none';
+        }
+        else{
+            document.getElementById('sentence_annotation').style.display = 'block';
+        } 
+    }
+
+    function showAnswer(){
+        document.getElementById('answer_panel').style.display = 'block';
+        document.getElementById('next_hit').disabled = false;
+        document.getElementById('back').disabled = false;
+        document.getElementById('sentence_annotation').style.display = 'none';
+        document.getElementById('summary_selection').style.display='none';
+        document.getElementById('step_3').style.display = 'none';
+        document.getElementById('buttons').style.display = 'none';
+
+    }
+
+    function displaySummaryAnnotation(){
+        if (current_page == 3) {
+            document.getElementById('summary_selection').style.display='block';
+            var roles = document.getElementsByClassName('role');
+            for (var i = 0; i < roles.length; i++ ){
+                roles[i].style.display = 'block';
+            }
+        } 
+        else{
+            document.getElementById('summary_selection').style.display='none';
+        }   
+    }
+
+
+    function checkPageStatus(){
+        if (current_page == 1) {
+            if (validation_yes_selected) {
+                document.getElementById('next').disabled = false;
+            }
+        } 
+        else if (current_page == 2) {
+            checkRoleSelection();
+            document.getElementById('submission').disabled = true;
+        }
+        else {
+            if (summary_sentence_selected){
+                document.getElementById('submission').disabled = false;
+            }
+            else {
+                document.getElementById('submission').disabled = true;
+            }
+        }
+    }
+
+    // next 
+    function goNext() {
+        current_page += 2;
+        for (var i = 1; i < 4; i++) {
+            if (current_page == i) {
+                document.getElementById('step_' + i).style.display = 'block';
+                if (i == 3) {
+                    document.getElementById('next').disabled = true;
+                }
+                if (i > 1){
+                    document.getElementById('back').disabled = false;
+                }
+            }
+            else {
+                document.getElementById('step_' + i).style.display = 'none';
+            }
+        }
+        displayAnnotationBox();
+        displaySummaryAnnotation();
+        checkPageStatus();
+    }
+
+    // back 
+    function goBack() {
+        current_page -= 2;
+        for (var i = 1; i < 4; i++) {
+            if (current_page == i) {
+                document.getElementById('step_' + i).style.display = 'block';
+                if (i == 1) {
+                    document.getElementById('back').disabled = true;
+                }
+                if (i < 3){
+                    document.getElementById('next').disabled = false;
+                }
+            }
+            else {
+                document.getElementById('step_' + i).style.display = 'none';
+            }
+        }
+        displayAnnotationBox();
+        displaySummaryAnnotation();      
+        checkPageStatus();   
+    }
+    
+    // render answer box 
+    $(document).ready(
+        function () {
+
+            for (let i = 1; i <= max_answer_length; i++) {
+                if (document.getElementById('answer_sentence_' + i).innerHTML.length > 0) {
+                    // disable selection 
+                    document.getElementById('row_' + i).style.display = 'block';
+                    selected.push(false);
+                    document.getElementById("single_sentence_summary").innerHTML += "<option value='" + i +"'>" + i + "</option>";
+                    if (i > answer_length){
+                        answer_length = i;
+                    }
+                }
+            }  
+
+            $( ".invalid_reason" ).prop('disabled', true); 
+
+            document.getElementById('question_validity').addEventListener("change", function(){
+                if ($("#question_validity option:selected").text() == "Yes"){ 
+                    console.log("yes selected");
+                    validation_yes_selected = true;
+                    // $('#invalid_reason').prop('disabled', true); 
+                    $( ".invalid_reason" ).prop('disabled', true); 
+                    document.getElementById('next').disabled = false;
+                    document.getElementById('submission').disabled = true;
+
+                }
+                else{
+                    console.log("no selected");
+                    // $('#invalid_reason').prop('disabled', false); 
+                    $( ".invalid_reason" ).prop('disabled', false); 
+                    if (reason_selected != true){
+                        document.getElementById('next').disabled = true;
+                    }
+                    else{
+                        document.getElementById('next').disabled = false;
+                    }
+                    document.getElementById('next').disabled = true;
+                }
+            })
+
+            var invalid_reason_selectors = document.getElementsByClassName('invalid_reason');
+            var set_invalid_reason = function(){
+                if ($("#question_validity option:selected").text() == "No"){ 
+                    if ($(this).prop("checked") == true){
+                        num_reason_selected += 1;
+                    }
+                    else {
+                        num_reason_selected -= 1;
+                    }
+                    console.log(num_reason_selected);
+                    if (num_reason_selected > 0){
+                        reason_selected = true;
+                        document.getElementById('submission').disabled = false;
+                    }
+                    else{
+                        reason_selected = false;
+                        document.getElementById('submission').disabled = true;
+                    }
+                }
+            }
+            for (var i = 0; i < invalid_reason_selectors.length; i++) {
+                invalid_reason_selectors[i].addEventListener('change', set_invalid_reason);
+            }
+
+            document.getElementById('single_sentence_summary').addEventListener("change", function(){
+                if ($("#single_sentence_summary option:selected").text() != ""){ 
+                    summary_sentence_selected = true;
+                    document.getElementById('multi_sentence_summary').disabled = true;
+                    document.getElementById('submission').disabled = false;
+                }
+                else {
+                    summary_sentence_selected = false;
+                    document.getElementById('multi_sentence_summary').disabled = false;
+                    document.getElementById('submission').disabled = true;
+                }
+            }); 
+
+            document.getElementById('multi_sentence_summary').addEventListener("change", function(){
+                if (this.value != ""){ 
+                    summary_sentence_selected = true;
+                    document.getElementById('single_sentence_summary').disabled = true;
+                    document.getElementById('submission').disabled = false;
+                }
+                else {
+                    summary_sentence_selected = false;
+                    document.getElementById('single_sentence_summary').disabled = false;
+                    document.getElementById('submission').disabled = true;
+                }
+            }); 
+
+
+    });
+</script>
+
+<!-- For the full list of available Crowd HTML Elements and their input/output documentation,
+      please refer to https://docs.aws.amazon.com/sagemaker/latest/dg/sms-ui-template-reference.html -->
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <link rel="icon" href="../../../../favicon.ico">
+
+    <title>Understanding the structure of answer for complex queries</title>
+
+    <style type="text/css">
+
+        body {
+        line-height: 1.6;
+        }
+        
+        .tg {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        .tg td {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: break-word;
+        }
+
+        .tg th {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: normal;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: break-word;
+        }
+
+        .tg .tg-fymr {
+            border-color: inherit;
+            font-weight: bold;
+            text-align: left;
+            vertical-align: top;
+            font-size: 16px;
+            padding: 10px 5px;
+        }
+
+        .tg .tg-0pky {
+            border-color: inherit;
+            text-align: left;
+            vertical-align: top;
+            font-size: 16px;
+            padding: 10px 5px;
+        }
+
+        .tg .tg-0lax {
+            text-align: left;
+            vertical-align: top;
+            font-size: 16px;
+            padding: 10px 5px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <crowd-form answer-format="flatten-objects">
+    <!-- You must include crowd-form so that your task submits answers to MTurk -->
+    <div class="container">
+        <div class="page-header">
+            <h2 class="text-muted" style="color:black">Understanding multi-sentence answer for complex queries</h1>
+        </div>
+
+        <div class="alert alert-danger" role="alert" style="font-size: 15pt; font-weight:bold;">
+            Thank you for doing the qualification task earlier! Please take a look at the <a href='https://docs.google.com/document/d/1epAZJ-5kN2PS0-xTC98v2li2WWEiQxBd7hvVnh3uhKI/edit#heading=h.xhvqt83lukva' target='_blank'>
+            qualification task answer</a> before working on the task.
+        </div>
+
+        <div>
+            <div>
+                <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;">
+                    <span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">We would like to study multi-sentence answer to complex queries such as “Why do birds sing in the morning?”. You will be presented with a question, originally posted on <span
+                            id="docs-internal-guid-4ef5cb92-7fff-32ff-b976-853c0fd45972"><a
+                                href="https://www.reddit.com/r/explainlikeimfive/" target="_blank"><span
+                                    style="font-size: 12pt; color: rgb(17, 85, 204); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; text-decoration-line: underline; text-decoration-skip-ink: none; vertical-align: baseline;">Reddit forum</span></a></span> or entered in <a
+                                    href="https://www.google.com/" target="_blank"><span
+                                        style="font-size: 12pt; color: rgb(17, 85, 204); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; text-decoration-line: underline; text-decoration-skip-ink: none; vertical-align: baseline;">Google</span></a>, and an answer paragraph, written by another user or selected from a Wikipedia page. 
+                                        </span>
+                </p><span id="docs-internal-guid-366cb1f7-7fff-6cd8-390d-00e7489c6235">
+                    <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"><span
+                            style="font-size: 11pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;"></span>
+                    </p>
+                    <p><span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0);">There are two steps in this task:
+                    </span></p>
+                    <p><span
+                        style="font-size: 12pt; font-family: Arial; font-weight:bold; color: rgb(0, 0, 0);">Step 1:</span>
+                        <span style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0);"> You will determine if this sample is a valid (question, answer) pair based on a set of reasons we defined below. If it is invalid, please simply choose <b>all reasons that apply</b> and skip the following step.</span>
+                    </p>
+
+                    <p><span
+                        style="font-size: 12pt; font-family: Arial; font-weight:bold; color: rgb(0, 0, 0);">Step 2:</span>
+                        <span style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0);"> You will choose one or more sentences which contain the main answer to the question.</span>
+                    </p>
+            </div>
+        </div>
+        <br>
+        <span style="font-size: 12pt; font-family: Arial; font-weight:bold; color: rgb(17, 85, 204);">You will work through the annotaion step by step. Click "Next" when you are done with the annotation in this step. 
+        You will be able to go back and change your answer in the previous step.</span><br>
+        <span style="font-size: 12pt; font-family: Arial; font-weight:bold; color: rgb(17, 85, 204);">There is a separate instruction for each step. Please spend some time to read the instruction and the 
+            examples carefully before 
+        working on the task.</span>
+        <div id='step_1'>
+        <h2>Step 1: Validity Check</h2>
+        <hr/>
+        <h3 id='step1_instruction_header'>Instructions</h3>
+        <a data-toggle="collapse" href="#step1_instruction" role="button" aria-expanded="false" aria-controls="step1_instruction">
+            Click here to show/hide instruction
+          </a>
+        <br>
+        <br>
+        <div id="step1_instruction">
+            <div>
+                <span style="font-size: 12pt; font-family: Arial;">
+                    In the first step, you will determine if this is a valid (question, answer) pair. We define below reasons for which a (question, answer) pair should be considered invalid for this task:</span>
+                    <div>
+                        <br>
+                        <table class="tg" style="table-layout: flexible;">
+                            <colgroup>
+                                <col style="width: 10px">
+                                <col style="width: 200px">
+                                <col style="width: 700px">
+                            </colgroup>
+                            <thead>
+                                <tr style='border-color:black; background-color:#ffe4e1'>
+                                    <th class="tg-fymr"><span>Reason</span></th>
+                                    <th class="tg-fymr"><span>Defintion</span></th>
+                                    <th class="tg-fymr"><span>Example</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="tg-0lax" style='font-weight: bold;'>No valid answer</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">The answer paragraph doesn't provide a valid answer to the question.
+                                            <br>
+                                            <span class="text-danger">Please note that if the answer can be inferred from the paragraph, it should be a valid answer (see second example).</span>
+                                                </span></td>
+                                    <td class="tg-0lax"><span><i>(1) Example of no valid answer</i></span><br><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>Why can’t we tickle ourselves?</span>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Answer:</b>I can. Am I a mutant? Is this my power?</span>
+                                        <br>
+                                            <span
+                                            style="font-weight:400;font-style:normal;"><b>Explanation:</b> There is no valid answer about the question asked. 
+                                        </span>
+                                        <br>
+                                        <br>
+                                        <span class="text-danger">
+                                            <span><i>(2) Counterexample: Implicit answer</i></span><br><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>what is the difference between the qx56 and qx80</span>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Answer:</b>The Infiniti QX80 ( called the Infiniti QX56 until 2014 ) is a full - size luxury SUV built by Nissan Motor Company Infiniti division .
+                                            The naming convention originally adhered to the current trend of using a numeric designation derived from the engine 's displacement , thus QX56 since the car has a 5.6 - liter engine .
+                                            From the 2014 model year , the car was renamed the QX80 , as part of Infiniti 's model name rebranding .The new name carries no meaning beyond suggesting that the vehicle is larger than smaller models such as the QX60 .</span>
+                                        <br>
+                                            <span
+                                            style="font-weight:400;font-style:normal;"><b>Explanation:</b>The answer could be inferred from the first sentence (QX80 is a new name of QX56).</span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax" style='font-weight: bold'>Nonsensical question</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">The question is nonsensical and it is unclear what is asked.
+                                            <br>
+                                            <span class="text-danger">Please note that some queries don't contain any question word, and yet it is clear what they are 
+                                                asking about (see second example) and hence they shouldn't fall under this category.
+                                            </span>
+                                        </span></td>
+                                    <td class="tg-0lax">
+                                        <span><i>(1) Nonsensical question</i></span><br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>i'm glad i'm not a kennedy</span>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Explanation:</b>This is not a question.</span>
+                                        <br>
+                                        <br>
+                                        <span class="text-danger">
+                                            <span><i>(2) Counterexample: Short queries</i></span><br><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>difference between senate and house of commons canada</span>
+                                        <br>
+                                            <span
+                                            style="font-weight:400;font-style:normal;"><b>Explanation:</b>This query doesn't contain any question word, but it if clear that it is asking 
+                                        about "What is the difference between senate and house of commons in Canada".</span>
+                                        </span>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax" style='font-weight: bold'>Multiple questions asked</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">More than one questions are asked in the answer question. <br>
+                                            <span class="text-danger">Please note that sometimes the question can be complicated and 
+                                        yet <b>only one question is asked</b> (See second example) and hence they shouldn't fall under this category.</span></span></td>
+                                    <td class="tg-0lax">
+                                        <span><i>(1) Multiple questions asked</i></span><br><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>How light pollution works, and would the stars appear straight away if we turned the lights off on the entire globe?</span>
+                                        <br>
+                                            <span
+                                            style="font-weight:400;font-style:normal;"><b>Explanation:</b> Two questions are asked in this sentence. We exclude such questions since it will be difficult to select the main content.</span>
+                                        <br>
+                                        <br>
+                                        <span class="text-danger">
+                                        <span><i>(2) Counterexample: One complicated question</i></span><br><span
+                                        style="font-weight:400;font-style:normal;"><b>Question:</b>Is the presence of pain evidence that damage is done, or is it just a warning?</span>
+                                    <br>
+                                        <span
+                                        style="font-weight:400;font-style:normal;"><b>Explanation:</b>This is <i>one</i> disjunctive question, asking whether the presence of pain is an evidence that damage is done or a warning.</span>
+                                    </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax" style='font-weight: bold'>Assumptions in the question rejected</td>
+                                    <td class="tg-0lax">
+                                        <span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">The answer focuses on rejecting assumptions in the question, without answering the question.<br>
+                                        <span class="text-danger">
+                                        We would like to point out two counter examples <br>
+                                        (1)If it is a question asking about difference between
+                                         two or more entities, an answer suggesting that there is no difference should be considered as a <b>valid QA</b>, 
+                                         instead of "Assumptions in the question rejected" (see second example).<br>
+                                        (2)If the answer <i>corrects</i> some assumption from the question, but still provides answer of what is asked (see third example).</span></span></td>
+                                    <td class="tg-0lax">
+                                        <span><i>(1) Assumption rejected:</i></span><br><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>Why can't I share a puddle of water with my dog? I get sick every time but he's fine.</span>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Answer:</b>dirty water' is pretty vague. There are lots of different diseases and contamits that water can have. A singular adaptation is not likely to make you 'dirty water' proof. Your dog himself is not dirty water proof. 
+                                            He can potentially get sickened or parasitized by contaminated water as well.</span>
+                                        <br>
+                                            <span
+                                            style="font-weight:400;font-style:normal;"><b>Explanation:</b> The answer argues that dogs can also be sickened by contaminated water which rejects the assumption
+                                        in the question "I get sick every time but he's fine".</span>
+                                        <br>
+                                        <br>
+                                        <span class="text-danger">
+                                        <span><i>(2) Counterexample: question about difference </i></span><br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>what's the difference between 9mm luger and parabellum</span>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Answer:</b>The 9 × 19mm Parabellum is a firearms cartridge that was designed by Georg Luger [...]
+                                            it is designated as the 9mm Luger by the SAAMI , and the 9 mm Luger by the C.I.P. .</span>
+                                        <br>
+                                            <span
+                                            style="font-weight:400;font-style:normal;"><b>Explanation:</b> The answer suggests that there is no difference between 9mm luger and parabellum. In this case,
+                                        we treat this as a <b>valid</b> QA pair.</span>
+                                        </span>
+                                        <br>
+                                        <br>
+                                    <span class="text-danger">
+                                        <span><i>(3) Counterexample: Partial rejection </i></span><br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>How can the chlorine in tap water kill microorganisms, but not the cells in our bodies?</span>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Answer:</b>It will kill cells in the body at high enough concentrations. Scientist and experts do their best to use as little as possible to get the job done and use "just enough" to get rid of the bacteria. Also, chlorine evaporates and degrades fairly quickly. 
+                                            So from the time the water is intitially treated to the time it eventually gets to your taps a lot of the chlorine is gone.</span>
+                                        <br>
+                                            <span
+                                            style="font-weight:400;font-style:normal;"><b>Explanation:</b> The answer corrects the assumption that chlorine can kill cells in the body
+                                        if the concentration is high. However, it also explains why the <b>chlorine in tap water</b> doesn't, which is the answer to the question.</span>
+                                        </span>
+                                    </span>
+                                        </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+        </div>
+        <br>
+        <div id="sample">
+            <h3>Annotation</h3>
+            <hr>
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                    <span style="font-size: 17px;"><b>Question:</b> ${question}</span><br>
+                    <span style="font-size: 17px;"><b>Answer:</b> ${answer_paragraph}</span>
+                </div>
+            </div>   
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                    <span style="font-size: 12pt; font-family: Arial;">Is this (question, answer) pair valid? </span> 
+                    <select name='question_validity' id='question_validity'>
+                        <option value="" selected disabled hidden>Choose here</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                    <br>
+                    <span style="font-size: 12pt; font-family: Arial;">If it is not valid, please choose <b>all applicable reasons</b> and submit the HIT.</span> 
+                    <!-- <select name='invalid_reason' id='invalid_reason'>
+                        <option value="" selected disabled hidden>Choose here</option>
+                        <option value="Bad answers">Bad answers</option>
+                        <option value="Confusing questions">Confusing questions</option>
+                        <option value="Subjective questions">Subjective questions</option>
+                        <option value="Multiple questions asked">Multiple questions asked</option>
+                        <option value="Assumptions in the question rejected">Assumptions in the question rejected</option>
+                    </select> -->
+                    <br>
+                    <input type="checkbox" id="no_valid_answer" name="no_valid_answer" value="yes" class='invalid_reason'>
+                    <label for="bad_answer">No valid answer</label><br>
+                    <input type="checkbox" id="nonsensical_question" name="nonsensical_question" value="yes" class='invalid_reason'>
+                    <label for="vehicle2">Confusing questions</label><br>
+                    <input type="checkbox" id="multiple_questions" name="multiple_questions" value="yes" class='invalid_reason'>
+                    <label for="vehicle3">Multiple questions asked</label><br>
+                    <input type="checkbox" id="assumption_rejected" name="assumption_rejected" value="yes" class='invalid_reason'>
+                    <label for="vehicle3">Assumptions in the question rejected</label><br>
+                    <br>
+                    </div>
+                </div>   
+        </div>
+    </div>
+    <div id='step_2' style="display:none;">
+    <h2>Step 2: Assigning Roles</h2>
+    <hr/>
+    <h3 id='step2_instruction_header'>Instructions</h3>
+    <h4 style='color:red;font-weight:bold;'>The instruction of this step is folded due to the length. Please click the below button to read the instruction before doing the task.</h4>
+    <a data-toggle="collapse" href="#step2_instruction" role="button" aria-expanded="false" aria-controls="step2_instruction">
+        Click here to show/hide instruction
+        </a>
+    <div id='step2_instruction' class="collapse">
+                <span style="font-size:16px;">In the second step, you will assign one of the roles defined below to each sentence in the answer paragraph.</span>
+                <br>
+                <br>
+                <div>
+                        <table class="tg" style="table-layout: flexible">
+                            <colgroup>
+                                <col style="width: 100px">
+                                <col style="width: 350px">
+                                <col style="width: 550px">
+                            </colgroup>
+                            <thead>
+                                <tr style='border-color:black; background-color:#ffe4e1;'>
+                                    <th class="tg-fymr">Role</th>
+                                    <th class="tg-fymr">Definition</th>
+                                    <th class="tg-fymr">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                            <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none" id="single_sentence">Answer</span></td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">The sentence contains information asked in the question. <span
+                                            style="font-weight:700;font-style:normal;text-decoration:none; color:rgb(17, 85, 204)">
+                                    </td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: what were the significant outcomes of the war of 1812 on the united states</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A:
+                                            [...]</span><span style="font-weight:700">The main result of the war was two centuries of peace between the United States and Britain.</span>[...]</td>
+                                </tr>
+                                <tr>
+                                    </td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Answer - Example</span>
+                                    </td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">The sentence
+                                            provides a specific example (either a concrete one or hypothetical one) for the answer.<br>
+                                            <br>
+                                        Note that sometimes the sentence will contain indication for example, (e.g. "For example, ..."), 
+                                        sometimes there might not be such a clear indication.
+                                        For sentence that doesn't explicitly indicate an example (see Example 1),
+                                        please select this role only if inserting "for example" to the sentence still makes it a coherent sentence in the paragraph.</td>
+                                    <td class="tg-0pky"><span
+                                            style="font-weight:400;font-style:italic;text-decoration:none">(1) Hypothetical
+                                            example </span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: Were major
+                                            news outlets established with political bias or was it formed over
+                                            time?</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A:</span>[...]This is impossible due to the problem of "anchoring."<span
+                                            style="font-weight:700">Consider a world where people on the right want the tax
+                                            rate to be 1% lower and people on the left want the tax rate to be 1%
+                                            higher.</span>.[...]<br><br>
+                                            <span
+                                            style="font-weight:400;font-style:italic;text-decoration:none">(2)Concrete
+                                            example</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: What is it
+                                            about electricity that kills you?</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A:</span>[...]<span
+                                            style="font-weight:700">For example, static electricity consists of tens of
+                                            thousands of volts, but basically no amps. </span>[...]
+                                        </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="tg-0pky">Answer - Organizational sentence</td>
+                                    <td class="tg-0pky">The sentence either tells the readers what they should expect to read in the answer, or indicates that the answer will come in the following sentences.
+                                    </td>
+                                    <td class="tg-0pky">
+                                        <span
+                                            style="font-weight:400;font-style:italic;text-decoration:none">(1) What should expect in the answer</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: Why do
+                                            candidates like O'Malley and Kasich stay in the race when polls consistently
+                                            show them at around 2%?</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A:</span><span
+                                            style="font-weight:700">There are a few reasons candidates with "no chance" to
+                                            win keep running. </span>[...]
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:italic;text-decoration:none">(2) Indication of answer in the following sentences</span><br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: Why do i sometimes get what seems to 
+                                            be a mosquito bite on my face at night in the middle of winter?</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A:</span>It might actually be a mosquito bite. I find the odd mosquito in my house in the winter from time to time, and I'm in Canada.[...]<span
+                                            style="font-weight:700">So why does it happen more often when you shower?</span>It's largely because the pressure from the showerhead, plus the fact that if you're shampooing or conditioning you're going to be running your fingers through it a lot, means that any loose hairs -- such as those in the telogen phase -- are more likely to come out, and in greater numbers.
+                                            </td>
+                                </tr>
+    
+                                <tr>
+                                    <td class="tg-0pky"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                                    <td class="tg-0pky"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">The sentence
+                                            provides information that is relevant to what is discussed in the answer, 
+                                            but not explicitly asked in the question. Such information might be (1) background information that is helpful
+                                        for readers who are not familiar with the topic discussed (2) related information that extends on what is asked in the question. Check out <a href='#FAQ'>FAQ</a> for more examples and distinction with role "Answer".</span></td>
+                                    <td class="tg-0pky"><span
+                                        style="font-weight:400;font-style:italic;text-decoration:none">(1)Background information</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: Why is it
+                                            better to use cloning software instead of just copying and pasting the entire
+                                            drive?</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A: </span><span
+                                            style="font-weight:700">When you install an operating system, it sets up what's
+                                            called a master file table, which holds file permissions for your files (telling
+                                            the computer who can access them) among other things, which are important for
+                                            the OS to work properly. </span>[...] Simply copy-pasting files doesn't copy
+                                        either of these, meaning if you want to back up an OS installation you should clone
+                                        the disk instead.
+                                        <br><br>
+                                        <span
+                                        style="font-weight:400;font-style:italic;text-decoration:none">(2)Related information</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: what is the difference between mandi and kabsa</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A: </span>Meat for kabsa can be cooked in various ways .A popular way of preparing meat is called mandi .<span
+                                            style="font-weight:700">This is an ancient technique that originates in Yemen , whereby meat is barbecued in a deep hole in the ground that is covered while the meat cooks . Another way of preparing and serving meat for kabsa is mathbi , where seasoned meat is grilled on flat stones that are placed on top of burning embers .</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0pky">Miscellaneous</td>
+                                    <td class="tg-0pky">The sentence serves other roles than the ones mentioned above. Here we list several scenarios that we have 
+                                        observed in the example. Note that this is not the complete list and it is possible that a sentence serves other roles 
+                                        than those listed here.
+                                    </td>
+                                    <td class="tg-0pky"><span
+                                        style="font-weight:400;font-style:italic;text-decoration:none">(1) Stating limitation of the answer</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: How do movies
+                                            become Oscar contenders?</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A:</span><span
+                                            style="font-weight:700">The academy has some pretty extensive rules, but heres
+                                            the short eli5 version 1</span>.[...]
+                                        <br>
+                                        <br>
+                                        <span
+                                        style="font-weight:400;font-style:italic;text-decoration:none">(2) Providing sources of the answer</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: Why do birds
+                                            chirp more in the morning?</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A:</span><span
+                                            style="font-weight:700">This info comes from the breeder who sold me my
+                                            lovebird, so I can't really provide a source.</span>[...]
+                                        <br><br>
+                                        <span
+                                            style="font-weight:400;font-style:italic;text-decoration:none">(3) Expressing sentiments</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: Why did
+                                            Catholicism embrace celibacy and why did Protestantism reject
+                                            it?</span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A:</span><span
+                                            style="font-weight:700">Good God, the amount of misinformation upvoted is
+                                            hurting. </span>[...]<br><br><span
+                                            style="font-weight:400;font-style:italic;text-decoration:none">(4) Providing pointers to
+                                            other resources </span><br><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Q: Why did
+                                            Catholicism embrace celibacy and why did Protestantism reject
+                                            it?</span><br><span style="font-style:normal;text-decoration:none">A</span><span
+                                            style="font-weight:bold;font-style:normal;text-decoration:none">:</span><span
+                                            style="font-weight:700;font-style:normal;text-decoration:none"> /r/askhistorians
+                                            has a few excellent discussions about this. </span><span
+                                            style="font-style:normal;text-decoration:none">[...]</span>
+                                        </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <br>
+    
+                <!-- </div>
+            </div> -->
+            <!-- </div> -->
+    
+            <h3>Example</h3>
+            <hr/>
+            <div>
+            <!-- <div class='panel panel-default'>
+                <div class='panel-body'> -->
+                    <span style='font-size: 12pt; font-family: Arial;'>Here are two example annotations for Step 2:</span>
+                    <p></p>
+                    <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"><span
+                        id="docs-internal-guid-8732e554-7fff-1007-8d7e-d27664688a16">
+                        <span
+                            style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Question: </span><span
+                            style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Were major news outlets established with political bias or was it formed over time?</span></span><br></p>
+                <div>
+                    <br>
+                    <table class="tg" style="table-layout: flexible;">
+                        <colgroup>
+                            <col style="width: 30px">
+                            <col style="width: 720px">
+                            <col style="width: 200px">
+                        </colgroup>
+                        <thead>
+                            <tr style='border-color:black; background-color:#ffe4e1'>
+                                <th class="tg-fymr"><span>No.</span></th>
+                                <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                <th class="tg-fymr"><span>Role</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="tg-0lax">1</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">> Media bias is just a weird topic to me, I don't see why there can't be news outlets that provide real, undramatized news that respect both the right and left so that people can form their opinions for themselves.</span></td>
+                                <td class="tg-0lax"><span
+                                style="font-weight:400;font-style:normal;text-decoration:none">Miscellaneous</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">2</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">This is impossible due to the problem of "anchoring."</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">3</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Consider a world where people on the right want the tax rate to be 1% lower and people on the left want the tax rate to be 1% higher.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer - Example</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">4</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">The news outlet reports both sides with equal respect.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer - Example</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">5</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Then one side decides to play a little trick, and declare that they want the tax rate to change by 90% instead of 1%.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer - Example</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">6</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Now what is the news outlet supposed to do?</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer - Example</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">7</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">If they treat this proposal with respect, they are biased towards the radicals.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer - Example</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">8</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">If they don't treat this proposal with respect, they are biased towards the other side.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer - Example</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">8</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">The news outlet has to make a decision on what is and is not reasonable, and that decision will always be considered biased by somebody.</span></td>
+                                <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br>
+                    
+                    <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"><span
+                            id="docs-internal-guid-8732e554-7fff-1007-8d7e-d27664688a16">
+                            <span
+                                style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Question: </span><span
+                                style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Why do birds chirp more in the morning?</span></span><br></p>
+                    <div>
+                        <br>
+                        <table class="tg" style="table-layout: flexible;">
+                            <colgroup>
+                                <col style="width: 30px">
+                                <col style="width: 720px">
+                                <col style="width: 200px">
+                            </colgroup>
+                            <thead>
+                                <tr style='border-color:black; background-color:#ffe4e1'>
+                                    <th class="tg-fymr"><span>No.</span></th>
+                                    <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                    <th class="tg-fymr"><span>Role</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="tg-0lax">1</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Birds
+                                            will begin to chirp in the hours before dawn, this is known as
+                                            the dawn chorus and can begin in earnest as early as 4 am (you
+                                            might have a few keeners in your area).</span></td>
+                                    <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax">2</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">There
+                                            are a couple of reasons why ornithologists think birds tend to
+                                            sing most in the early hours...</span></td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Answer - Organizational question</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax">3</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">*
+                                            First, the first to chirp is beating out the competition and is
+                                            less likely to be drowned out by the completion later in the
+                                            morning.</span></td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax">4</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">*
+                                            Second, the air before dawn is usually still and thus much
+                                            better at conducting sound.</span></td>
+                                    <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax">5</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">More
+                                            recent studies have shown that early-morning songs don't travel
+                                            farther, but can be much clearer than later-in-the-day
+                                            songs.</span></td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax">6</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">A
+                                            *'clear'* advantage for those early-birds.</span></td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax">7</td>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">*
+                                            Third, there isn't much to do in the early morning but sing
+                                            since light levels are likely to low to forage</span></td>
+                                    <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+            <h3>More examples:</h3><span style="font-size: 12pt; font-family: Arial;">Please refer to this doc for
+                more examples: </span><span id="docs-internal-guid-254990d6-7fff-d0e4-2d2f-3a2d8a8049cb"><a
+                    href="https://docs.google.com/document/d/1D-QcilDlkkZxsEPi__Yr8NUHOzNUqlVLDlu9WCB2f2E/edit?usp=sharing"
+                    target="_blank"><span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(17, 85, 204); text-decoration-line: underline;">Long
+                        Form Question Answering Examples</span></a></span>
+    </div>
+
+    <h3 id='FAQ'>FAQ <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+        class="bi bi-question-circle-fill" viewBox="0 0 16 16">
+        <path
+            d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.496 6.033h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286a.237.237 0 0 0 .241.247zm2.325 6.443c.61 0 1.029-.394 1.029-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94 0 .533.425.927 1.01.927z" />
+    </svg> </h3>
+<hr/>
+<div>
+    <span style="font-size: 12pt; font-family: Arial;"><b>Q: How can I distinguish between category “Answer” vs. "Auxiliary Information" ?</b></span>
+    <p>
+        <span style="font-size: 12pt; font-family: Arial;"><b>A:</b></span>
+    <ul style="font-size: 12pt; font-family: Arial;">
+        <li><b>Answer</b> are the sentences that contain information which answers the question.</li>
+        <li><b>Auxiliary Information</b> provides information that are related to what is discussed in the answer, but not asked in the question. 
+            Auxiliary information might help the reader comprehend the answer, yet whose removal  won't impact the completeness of the answer. 
+            In the example below, sentence
+                (3) - (5) talks about other replica of the status of liberty in Japan, which is relevant information, but not asked in the question.</li>
+    </ul>
+    <div class='panel panel-default'>
+        <div class='panel-body'>
+            <div>
+            <span style="font-size: 12pt; font-family: Arial; ">Question:
+            </span><span
+                style="font-size: 12pt; font-family: Arial;"><b>why is there a statue of liberty in odaiba</b></span></div>
+            <br></p>
+            <div>
+                <table class="tg" style="table-layout: flexible;">
+                    <colgroup>
+                        <col style="width: 30px">
+                        <col style="width: 720px">
+                        <col style="width: 200px">
+                    </colgroup>
+                    <thead>
+                        <tr style='border-color:black; background-color:#ffe4e1;'>
+                            <th class="tg-fymr"><span>No.</span></th>
+                            <th class="tg-fymr"><span>Answer Sentence</span></th>
+                            <th class="tg-fymr"><span>Role</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="tg-0lax">1</td>
+                            <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">The French Statue of Liberty from the Île aux Cygnes came to Odaiba , 
+                                    Tokyo , from April 1998 to May 1999 in commemoration of `` The French year in Japan '' .</span></td>
+                            <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                        </tr>
+                        <tr>
+                            <td class="tg-0lax">2</td>
+                            <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Because of its popularity , in 2000 
+                                    a replica of the French Statue of Liberty was erected at the same place .</span></td>
+                            <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                        </tr>
+                        <tr>
+                            <td class="tg-0lax">3</td>
+                            <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Also in Japan , a small Statue of Liberty is in the 
+                                    Amerika - mura ( American Village ) shopping district in Osaka , Japan .</span></td>
+                            <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                        </tr>
+                        <tr>
+                            <td class="tg-0lax">4</td>
+                            <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Another replica is in Oirase near the town of Shimoda south of Misawa in 
+                                    Aomori Prefecture , where the United States has an 8,000 - person U.S. Air Force base .</span></td>
+                            <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                        </tr>
+                        <tr>
+                            <td class="tg-0lax">5</td>
+                            <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">A replica of the Statue of Liberty in Ishinomaki , 
+                                    Miyagi Prefecture , was damaged by the 2011 Tōhoku earthquake and tsunami ..</span></td>
+                            <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+        <div>
+            <span style="font-size: 12pt; font-family: Arial;">In the example below, sentence (1) - (2) provides background information on what is "luxury tax money" and the last sentence answers the question "what happens to luxury tax money in nba".</span>
+        </div>
+        <br>
+        <div class='panel panel-default'>
+            <div class='panel-body'>
+                <div>
+                <span style="font-size: 12pt; font-family: Arial; ">Question:
+                </span><span
+                    style="font-size: 12pt; font-family: Arial;"><b>what happens to luxury tax money in nba</b></span></div>
+                <br></p>
+                <div>
+                    <table class="tg" style="table-layout: flexible;">
+                        <colgroup>
+                            <col style="width: 30px">
+                            <col style="width: 720px">
+                            <col style="width: 200px">
+                        </colgroup>
+                        <thead>
+                            <tr style='border-color:black; background-color:#ffe4e1;'>
+                                <th class="tg-fymr"><span>No.</span></th>
+                                <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                <th class="tg-fymr"><span>Role</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="tg-0lax">1</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">A luxury tax in professional sports is a surcharge put on the aggregate payroll of a team to the extent to which it exceeds a predetermined guideline level set by the league .</span></td>
+                                <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">2</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">The ostensible purpose of this `` tax '' is to prevent teams in major markets with high incomes from signing almost all of the more talented players and hence destroying the competitive balance necessary for a sport to maintain fan interest .</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">3</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">The money derived from the `` tax '' is either divided among the teams that play in the smaller markets , presumably to allow them to have more revenue to devote toward the contracts of high - quality players , or in the case of Major League Baseball , used by the league for other pre-defined purposes .</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+
+        <div>
+            <span style="font-size: 12pt; font-family: Arial;"><b>Q: What if a sentence serves two or more
+                    roles?</b></span>
+            <p>
+                <span style="font-size: 12pt; font-family: Arial;"><b>A:</b></span>
+                <span style="font-size: 12pt; font-family: Arial;">It is possible that one sentence serves
+                    more than one role. If that is the case, please select the most appropriate one for the
+                    sentence. In the example below, the sentence contains
+                        (1) Response to other posts ("Miscellaneous"): “in addition to what others have said” as well as (2) 
+                        Answer: “clone software can utilize block by block copying which can be
+                        much faster than copying than doing it file by file.” However since the second part is the
+                        main focus of the sentence, it should be labeled as the role “Answer”.</span>
+
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                    <div>
+                    <span
+                        style="font-size: 12pt; font-family: Arial; ">Question:
+                    </span><span
+                        style="font-size: 12pt; font-family:Arial; "><b>Why
+                        is it better to use cloning software instead of just copying and pasting the entire
+                        drive?</span></b></div>
+                        <br></p>
+                    <table class="tg" style="table-layout: flexible;">
+                        <colgroup>
+                            <col style="width: 30px">
+                            <col style="width: 620px">
+                            <col style="width: 200px">
+                            <col style="width: 200px">
+                        </colgroup>
+                        <thead>
+                            <tr style='border-color:black; background-color:#ffe4e1;'>
+                                <th class="tg-fymr"><span>No.</span></th>
+                                <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                <th class="tg-fymr"><span>Role</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="tg-0lax">1</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">In
+                                        addition to what others have said, clone software can utilize block
+                                        by block copying which can be much faster than copying than doing it
+                                        file by file.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </div>
+</div>
+<br>
+</div>
+
+<div id="step_3" style="display: none;">
+<h2>Step 2: Choosing the answer summary</h2>
+<hr/>
+
+<h3 id='step3_instruction_header'>Instructions</h3>
+<a data-toggle="collapse" href="#step3_instruction" role="button" aria-expanded="false" aria-controls="step3_instruction">
+    Click here to show/hide instruction
+    </a>
+<div id='step3_instruction'>
+    <span style="font-size:16px">In this step, you will identify the sentence(s) containing the main answer to the question (i.e. the answer summary).</span><br>
+    <br>
+    <span style="font-size:16px; font-weight:bold;">What does "answer summary" mean?</span>
+    <br>
+    <span style="font-size:16px;">
+        Even though there are multiple sentences presented in the answer paragraph, some of them play various roles other than actually answering the question (e.g. providing examples, 
+        serving as an organizational sentences, providing auxiliary information or explaining the answers). The main answer normally lies in a small subset of the sentences, and 
+        we would like to identify the sentences containing such main answer.
+    </span>
+    <br>
+    <br>
+    <span style="font-size:16px; font-weight:bold;">How many sentences should be selected?</span>
+    <br>
+    <span style="font-size:16px;">We would like to identify the <b>minimal set</b> of sentences that cover the main content of the answer. In most of the cases, a <b>single-sentence answer</b> exists. However, it is also possible that 
+        a single sentence doesn't suffice. 
+    For instance, for a question asking for reasons, there might be multiple reasons listed and hence the answer spans across multiple sentences. 
+    If that is the case, you will enter the list of sentence index that comprises the main answer.</span>
+    <br>
+    <br>
+    <span style="font-size:16px; font-weight:bold;">To identify the answer summary:</span>
+        <ul>
+        <li><span style="font-size:16px">
+        You will first determine if there is a single sentence in the paragraph that can serve as an answer to the question. If so, select the index in the first dropdown box and 
+    leave the input box empty.</span></li>
+        <li><span style="font-size:16px">
+            <b>Only if</b> a single sentence summary doesn't exist, you will leave the dropdown box empty and enter the list of sentence index that comprises the main answer.</span></li>
+    </ul>
+    
+        <h3>Example</h3>
+        <hr/>
+        <span style='font-size: 12pt; font-family: Arial;'>Here we provide a few examples to demonstrate how answer summary should be selected. We additionally include the role for each sentence to better demonstrate distinctions between 
+        answer summary and other sentences. The actual data to annotate <i>will not</i> include the role for each sentence.</span>
+        <br>
+        <div>
+            <span style='font-size: 12pt; font-family: Arial;'>The first example here has one sentence that summarizes the answer to the question. </span>
+            <br>
+            <br>
+            
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"><span
+                    id="docs-internal-guid-8732e554-7fff-1007-8d7e-d27664688a16">
+                    <span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Question: </span><span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Were major news outlets established with political bias or was it formed over time?</span></span><br>
+                        <span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Single Sentence Answer Summary: </span><span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">8</span><br>
+            <br>
+                        <div>
+                            <table class="tg" style="table-layout: flexible;">
+                                <colgroup>
+                                    <col style="width: 30px">
+                                    <col style="width: 720px">
+                                    <col style="width: 200px">
+                                </colgroup>
+                                <thead>
+                                    <tr style='border-color:black; background-color:#ffe4e1'>
+                                        <th class="tg-fymr"><span>No.</span></th>
+                                        <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                        <th class="tg-fymr"><span>Role</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="tg-0lax">1</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">> Media bias is just a weird topic to me, I don't see why there can't be news outlets that provide real, undramatized news that respect both the right and left so that people can form their opinions for themselves.</span></td>
+                                        <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Miscellaneous</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">2</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">This is impossible due to the problem of "anchoring."</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">3</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Consider a world where people on the right want the tax rate to be 1% lower and people on the left want the tax rate to be 1% higher.</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Example</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">4</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">The news outlet reports both sides with equal respect.</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Example</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">5</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Then one side decides to play a little trick, and declare that they want the tax rate to change by 90% instead of 1%.</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Example</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">6</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Now what is the news outlet supposed to do?</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Example</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">7</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">If they treat this proposal with respect, they are biased towards the radicals.</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Example</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">8</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">If they don't treat this proposal with respect, they are biased towards the other side.</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Example</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">8</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">The news outlet has to make a decision on what is and is not reasonable, and that decision will always be considered biased by somebody.</span></td>
+                                        <td class="tg-0lax"><span
+                                                    style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+            </div>
+            </div></div>
+            <br>
+            
+            <span style='font-size: 12pt; font-family: Arial;'>The second example doesn't have a single sentence answer as multiple reasons are provided in the answer. </span>
+            <br>
+            <br>
+            
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                
+                <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"><span
+                        id="docs-internal-guid-8732e554-7fff-1007-8d7e-d27664688a16">
+                        <span
+                            style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Question: </span><span
+                            style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Why do birds chirp more in the morning?</span></span><br></p>
+                <div>
+                    <div>
+                        <span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Single Sentence Answer Summary: </span><span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">None</span><br>
+                        <span style="font-size:16px;"><b>List of sentence index that comprises the answer summary:</b> 3, 4, 7</span>
+                    </div>
+                    <br>
+                    <table class="tg" style="table-layout: flexible;">
+                        <colgroup>
+                            <col style="width: 30px">
+                            <col style="width: 720px">
+                            <col style="width: 200px">
+                        </colgroup>
+                        <thead>
+                            <tr style='border-color:black; background-color:#ffe4e1'>
+                                <th class="tg-fymr"><span>No.</span></th>
+                                <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                <th class="tg-fymr"><span>Role</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="tg-0lax">1</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Birds
+                                        will begin to chirp in the hours before dawn, this is known as
+                                        the dawn chorus and can begin in earnest as early as 4 am (you
+                                        might have a few keeners in your area).</span></td>
+                                <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">2</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">There
+                                        are a couple of reasons why ornithologists think birds tend to
+                                        sing most in the early hours...</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Organizational question</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">3</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">*
+                                        First, the first to chirp is beating out the competition and is
+                                        less likely to be drowned out by the completion later in the
+                                        morning.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">4</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">*
+                                        Second, the air before dawn is usually still and thus much
+                                        better at conducting sound.</span></td>
+                                <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">5</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">More
+                                        recent studies have shown that early-morning songs don't travel
+                                        farther, but can be much clearer than later-in-the-day
+                                        songs.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">6</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">A
+                                        *'clear'* advantage for those early-birds.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">7</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">*
+                                        Third, there isn't much to do in the early morning but sing
+                                        since light levels are likely to low to forage</span></td>
+                                <td class="tg-0lax"><span
+                                    style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+            </div>
+            </div>
+    </div>
+
+    <div>
+        <span style='font-size: 12pt; font-family: Arial;'>The third example has all sentences with role "Answer". The first sentence provides the main reason. 
+            The following sentences elaborate on "different types of muslims" and 
+        "they have been at war with each other - forever" respectively. Hence the first sentence is the single sentence summary.</span>
+        <br>
+        <br>
+        <div class='panel panel-default'>
+            <div class='panel-body'>
+                <div>
+                <span style="font-size: 12pt; font-family: Arial; ">Question:
+                </span><span
+                    style="font-size: 12pt; font-family: Arial;"><b>Why do the muslim refugees go to Europe instead of muslim countries like Saudi Arabia?</b></span></div>
+                <span
+                style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Single Sentence Answer Summary:</span><span
+                style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">1</span><br>
+                <br>
+                <div>
+                    <table class="tg" style="table-layout: flexible;">
+                        <colgroup>
+                            <col style="width: 30px">
+                            <col style="width: 620px">
+                            <col style="width: 200px">
+                            <col style="width: 200px">
+                        </colgroup>
+                        <thead>
+                            <tr style='border-color:black; background-color:#ffe4e1;'>
+                                <th class="tg-fymr"><span>No.</span></th>
+                                <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                <th class="tg-fymr"><span>Role</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="tg-0lax">1</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">There are different types of muslims and they have been at war with each other -forever.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">2</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Saudi Arabia's muslims are different than Syrias'.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">3</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">It just may be that the very war that displaced those refugees from Syria was started by Saudi Arabia, so naturally, they won't go there.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+                </div>
+            </div>
+</div>
+</div>
+
+</div>
+
+<br>
+<div  id="sentence_annotation" style="display: none;">
+<h3>Annotation</h3>
+<hr>
+<div class='panel panel-default'>
+<div class='panel-body'>
+<div>
+    <span style="font-size: 17px;"><b>Question:</b> ${question}</span>
+</div>
+<br>
+<div>
+    <style type="text/css">
+        .tg {
+            border-collapse: collapse;
+            border-spacing: 0
+        }
+
+        .tg td {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            padding: 10px 5px;
+            word-break: normal;
+        }
+
+        .tg th {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: normal;
+            padding: 10px 5px;
+            word-break: normal;
+        }
+    </style>
+    <table class="tg" style="table-layout: fixed; width:730px">
+        <thead>
+            <tr style='border-color:black; background-color:#ffe4e1; width:930px'>
+                <th class="tg-fymr" style='width:30px;'><span>No.</span></th>
+                <th class="tg-fymr" style='width:700px'><span>Answer Sentence</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr id='row_1' style='display:none; width:730px'>
+                <td class="tg-0lax" style='width:30px;'>1</td>
+                <td class="tg-0lax" id='answer_sentence_1' style='width:700px'>${answer_sentence_1}</td>
+            </tr>
+            <tr id='row_2' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>2</td>
+                <td class="tg-0lax" id='answer_sentence_2' style='width:700px'>${answer_sentence_2}</td>
+            </tr>
+            <tr id='row_3' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>3</td>
+                <td class="tg-0lax" id='answer_sentence_3' style='width:700px'>${answer_sentence_3}</td>
+            </tr>
+            <tr id='row_4' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>4</td>
+                <td class="tg-0lax" id='answer_sentence_4' style='width:700px'>${answer_sentence_4}</td>
+            </tr>
+            <tr id='row_5' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>5</td>
+                <td class="tg-0lax" id='answer_sentence_5' style='width:700px'>${answer_sentence_5}</td>
+            </tr>
+            <tr id='row_6' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>6</td>
+                <td class="tg-0lax" id='answer_sentence_6' style='width:700px'>${answer_sentence_6}</td>
+            </tr>
+            <tr id='row_7' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>7</td>
+                <td class="tg-0lax" id='answer_sentence_7' style='width:700px'>${answer_sentence_7}</td>
+            </tr>
+            <tr id='row_8' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>8</td>
+                <td class="tg-0lax" id='answer_sentence_8' style='width:700px'>${answer_sentence_8}</td>
+            </tr>
+            <tr id='row_9' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>9</td>
+                <td class="tg-0lax" id='answer_sentence_9' style='width:700px'>${answer_sentence_9}</td>
+            </tr>
+            <tr id='row_10' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>10</td>
+                <td class="tg-0lax" id='answer_sentence_10' style='width:700px'>${answer_sentence_10}</td>
+            </tr>
+            <tr id='row_11' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>11</td>
+                <td class="tg-0lax" id='answer_sentence_11' style='width:700px'>${answer_sentence_11}</td>
+            </tr>
+            <tr id='row_12' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>12</td>
+                <td class="tg-0lax" id='answer_sentence_12' style='width:700px'>${answer_sentence_12}</td>
+            </tr>
+            <tr id='row_13' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>13</td>
+                <td class="tg-0lax" id='answer_sentence_13' style='width:700px'>${answer_sentence_13}</td>
+            </tr>
+            <tr id='row_14' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>14</td>
+                <td class="tg-0lax" id='answer_sentence_14' style='width:700px'>${answer_sentence_14}</td>
+            </tr>
+            <tr id='row_15' style='display:none; width:930px'>
+                <td class="tg-0lax" style='width:30px;'>15</td>
+                <td class="tg-0lax" id='answer_sentence_15' style='width:700px'>${answer_sentence_15}</td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+</div>
+</div>
+</div>
+</div>
+
+<div class='panel panel-default' id="summary_selection" style="display:none;">
+    <div class='panel-body'>
+            <span style="font-size: 12pt; font-family: Arial;">Please select the single sentence answer summary here:</span> 
+            <select name='single_sentence_summary' id='single_sentence_summary'>
+                <option value="" selected></option>
+            </select>
+            <br>
+            <span style="font-size: 12pt; font-family: Arial;">If there is no single-sentence that concisely answers the question, please enter a <b>minimal</b> set of sentence indexes (separated by 
+                comma, e.g. "1,2,3") that will consist of a valid answer here: </span> <input name="multi_sentence_summary" id ="multi_sentence_summary"></input> 
+                <br><span style="font-weight:bold;
+                font-size:12pt;" class="text-danger">
+                Please think twice if you entered half or more than half of the sentences here. Are all of them required to answer the question?</span>
+</div>
+</div> 
+
+
+
+<button type="button" onclick="goBack()" id="back" class="btn btn-info" disabled>Back</button>
+<button type="button" onclick="goNext()" id="next" class="btn btn-primary" disabled>Next</button>
+<crowd-button id="submission" form-action="submit" disabled>
+    Submit</crowd-button>
+
+
+<!-- hide this for now! -->
+<div style='display: none;'> 
+    <h3>FAQ <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+        class="bi bi-question-circle-fill" viewBox="0 0 16 16">
+        <path
+            d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.496 6.033h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286a.237.237 0 0 0 .241.247zm2.325 6.443c.61 0 1.029-.394 1.029-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94 0 .533.425.927 1.01.927z" />
+    </svg> </h3>
+<hr/>
+    <div>
+        <span style="font-size: 12pt; font-family: Arial;"><b>Q: How can I distinguish between category “Answer” vs. "Auxiliary Information" ?</b></span>
+        <p>
+            <span style="font-size: 12pt; font-family: Arial;"><b>A:</b></span>
+        <ul style="font-size: 12pt; font-family: Arial;">
+            <li><b>Answer</b> are the sentences that contain information which answers the question.
+            In this example, it is the reason why there is a statue of liberty in odaiba.</li>
+            <li><b>Auxiliary Information</b> provides information that are related to what is discussed in the answer, but not asked in the question. 
+                Auxiliary information might help the reader comprehend the answer, yet whose removal  won't impact the completeness of the answer. 
+                In the example below, sentence
+                (3) - (5) talks about other replica of the status of liberty in Japan, which is related information, but not asked in the question.</li>
+        </ul>
+        <div class='panel panel-default'>
+            <div class='panel-body'>
+                <div>
+                <span style="font-size: 12pt; font-family: Arial; ">Question:
+                </span><span
+                    style="font-size: 12pt; font-family: Arial;"><b>Please
+                    explain me how the string theory suggests the theoretical existence of the
+                    multiverse?</b></span></div>
+                <br></p>
+                <div>
+                    <table class="tg" style="table-layout: flexible;">
+                        <colgroup>
+                            <col style="width: 30px">
+                            <col style="width: 720px">
+                            <col style="width: 200px">
+                        </colgroup>
+                        <thead>
+                            <tr style='border-color:black; background-color:#ffe4e1;'>
+                                <th class="tg-fymr"><span>No.</span></th>
+                                <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                <th class="tg-fymr"><span>Role</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="tg-0lax">1</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">It's
+                                        not so much string theory as it's about interpretations of how
+                                        quantum mechanics works.</span></td>
+                                <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Reaction to the question</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">2</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">In QM
+                                        the world we see is fundamentally based upon chance; the waveform
+                                        determines the chance the particle can be found at that state, but
+                                        once we've measured the position the whole waveform 'collapses' and
+                                        the particle 'is' in that specific state.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">3</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">This
+                                        places an observer in a weird spot where observing what happens
+                                        fundamentally changes the outcome.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">4</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">This
+                                        goes against our intuition and also slightly against what scientists
+                                        would want, we'd like to be neutral observers an not interfere with
+                                        our experiments.</span></td>
+                                <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Auxiliary Information</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">5</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">The
+                                        multi-verse comes in here and basically says: the observer is not
+                                        anything special, everything happens, the particle is in every
+                                        possible state, but in different universes.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">6</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Which
+                                        will mean that measuring simply tells you in 'what universe' you are
+                                        in.</span></td>
+                                <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                            <tr>
+                                <td class="tg-0lax">7</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Right
+                                        now, however, there is no way to prove or disprove this theory, and
+                                        I don't think anyone came up with even a theoretical way to test
+                                        this.</span></td>
+                                        <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Miscellaneous</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <br>
+            <div>
+                <span style="font-size: 12pt; font-family: Arial;"><b>Q: How should I select the sentence of role "Single Sentence Summary" under category "Answer" ?</b></span>
+                <p>
+                    <span style="font-size: 12pt; font-family: Arial;"><b>A:</b> Sentence of role "Single Sentence Summary" can serve as a single-sentence answer to the question (if that exists),
+                    and hence should be distinguished from "Example" and "Elaboration".
+                    In the example below, all three sentences fall under the "Answer" category. The first sentence provides the main reason and hence is labeled as "Single Sentence Summary". 
+                    The following sentences elaborate on "different types of muslims" and 
+                "they have been at war with each other - forever" respectively. </span> 
+                <div class='panel panel-default'>
+                    <div class='panel-body'>
+                        <div>
+                        <span style="font-size: 12pt; font-family: Arial; ">Question:
+                        </span><span
+                            style="font-size: 12pt; font-family: Arial;"><b>Why do the muslim refugees go to Europe instead of muslim countries like Saudi Arabia?</b></span></div>
+                        <br></p>
+                        <div>
+                            <table class="tg" style="table-layout: flexible;">
+                                <colgroup>
+                                    <col style="width: 30px">
+                                    <col style="width: 620px">
+                                    <col style="width: 200px">
+                                    <col style="width: 200px">
+                                </colgroup>
+                                <thead>
+                                    <tr style='border-color:black; background-color:#ffe4e1;'>
+                                        <th class="tg-fymr"><span>No.</span></th>
+                                        <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                        <th class="tg-fymr"><span>Role</span></th>
+                                        <th class="tg-fymr"><span>Single Sentence Summary</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="tg-0lax">1</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">There are different types of muslims and they have been at war with each other -forever.</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                        <td class="tg-0lax"><span
+                                                    style="font-weight:400;font-style:normal;text-decoration:none; font-weight:bold;color:rgb(17, 85, 204)">☑️</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">1</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Saudi Arabia's muslims are different than Syrias'.</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                        <td class="tg-0lax"><span
+                                                    style="font-weight:400;font-style:normal;text-decoration:none"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="tg-0lax">1</td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">It just may be that the very war that displaced those refugees from Syria was started by Saudi Arabia, so naturally, they won't go there.</span></td>
+                                        <td class="tg-0lax"><span
+                                                style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                                        <td class="tg-0lax"><span
+                                                    style="font-weight:400;font-style:normal;text-decoration:none"></span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+        <br>
+        <div>
+            <span style="font-size: 12pt; font-family: Arial;"><b>Q: What if a sentence serves two or more
+                    roles?</b></span>
+            <p>
+                <span style="font-size: 12pt; font-family: Arial;"><b>A:</b></span>
+                <span style="font-size: 12pt; font-family: Arial;">It is possible that one sentence serves
+                    more than one role. If that is the case, please select the most appropriate one for the
+                    sentence. In the example below, the sentence contains
+                        (1) Response to other posts ("Miscellaneous"): “in addition to what others have said” as well as (2) 
+                        Answer: “clone software can utilize block by block copying which can be
+                        much faster than copying than doing it file by file.” However since the second part is the
+                        main focus of the sentence, it should be labeled as the role “Answer”.</span>
+
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                    <div>
+                    <span
+                        style="font-size: 12pt; font-family: Arial; ">Question:
+                    </span><span
+                        style="font-size: 12pt; font-family:Arial; "><b>Why
+                        is it better to use cloning software instead of just copying and pasting the entire
+                        drive?</span></b></div>
+                        <br></p>
+                    <table class="tg" style="table-layout: flexible;">
+                        <colgroup>
+                            <col style="width: 30px">
+                            <col style="width: 620px">
+                            <col style="width: 200px">
+                            <col style="width: 200px">
+                        </colgroup>
+                        <thead>
+                            <tr style='border-color:black; background-color:#ffe4e1;'>
+                                <th class="tg-fymr"><span>No.</span></th>
+                                <th class="tg-fymr"><span>Answer Sentence</span></th>
+                                <th class="tg-fymr"><span>Role</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="tg-0lax">1</td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">In
+                                        addition to what others have said, clone software can utilize block
+                                        by block copying which can be much faster than copying than doing it
+                                        file by file.</span></td>
+                                <td class="tg-0lax"><span
+                                        style="font-weight:400;font-style:normal;text-decoration:none">Answer</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                </div>
+    </div>
+    <br>
+<!-- </div>
+</div> -->
+</div>
+</span></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</crowd-form>
+</body>

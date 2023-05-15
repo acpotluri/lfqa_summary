@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
+*/.DS_Store
+model/*/checkpoint*
+notebooks/.ipynb_checkpoints

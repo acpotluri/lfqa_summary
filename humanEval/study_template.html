@@ -1,0 +1,702 @@
+<!-- You must include this JavaScript file -->
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+
+    var firstPage = true;
+    var summary_fluent_selected = false;
+    var summary_info_selected = false;
+    var answer_intention_selected = false;
+    var answer_info_selected = false;
+
+    function goNext() {
+        firstPage = false;
+        document.getElementById('back').disabled = false;
+        document.getElementById('next').disabled = true;
+        document.getElementById('step_2').style.display = 'block';
+        document.getElementById('step_1').style.display = 'none';
+    }
+    
+    function goBack() {
+        firstPage = true;
+        document.getElementById('back').disabled = true;
+        document.getElementById('next').disabled = false;
+        document.getElementById('step_2').style.display = 'none';
+        document.getElementById('step_1').style.display = 'block';
+    }
+    
+    $(document).ready(
+        function () {
+            document.getElementById('summary_fluent').addEventListener("change", function(){
+                summary_fluent_selected = true;
+                if(summary_fluent_selected && summary_info_selected) {
+                    document.getElementById('next').disabled = false;
+                }
+            })
+
+            document.getElementById('summary_info').addEventListener("change", function(){
+                summary_info_selected = true;
+                if(summary_fluent_selected && summary_info_selected) {
+                    document.getElementById('next').disabled = false;
+                }
+            })
+
+            document.getElementById('answer_intention').addEventListener("change", function(){
+                answer_intention_selected = true;
+                if(answer_intention_selected && answer_info_selected) {
+                    document.getElementById('submission').disabled = false;
+                }
+            })
+
+            document.getElementById('answer_info').addEventListener("change", function(){
+                answer_info_selected = true;
+                if(answer_intention_selected && answer_info_selected) {
+                    document.getElementById('submission').disabled = false;
+                }
+            })
+    });
+</script>
+
+<!-- For the full list of available Crowd HTML Elements and their input/output documentation,
+      please refer to https://docs.aws.amazon.com/sagemaker/latest/dg/sms-ui-template-reference.html -->
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <link rel="icon" href="../../../../favicon.ico">
+
+    <title>Understanding Quality of Answers</title>
+
+    <style type="text/css">
+
+        body {
+        line-height: 1.6;
+        }
+        
+        .tg {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        .tg td {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: break-word;
+        }
+
+        .tg th {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: normal;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: break-word;
+        }
+
+        .tg .tg-fymr {
+            border-color: inherit;
+            font-weight: bold;
+            text-align: left;
+            vertical-align: top;
+            font-size: 16px;
+            padding: 10px 5px;
+        }
+
+        .tg .tg-0pky {
+            border-color: inherit;
+            text-align: left;
+            vertical-align: top;
+            font-size: 16px;
+            padding: 10px 5px;
+        }
+
+        .tg .tg-0lax {
+            text-align: left;
+            vertical-align: top;
+            font-size: 16px;
+            padding: 10px 5px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <crowd-form answer-format="flatten-objects">
+    <!-- You must include crowd-form so that your task submits answers to MTurk -->
+    <div class="container">
+        <div class="page-header">
+            <h2 class="text-muted" style="color:black">Understanding multi-sentence answers for complex queries</h1>
+        </div>
+
+        <div>
+            <div>
+                <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;">
+                    <span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">We would like to study multi-sentence answers to complex queries such as “Why do birds sing in the morning?”. You will be presented with a question, originally posted on <span
+                            id="docs-internal-guid-4ef5cb92-7fff-32ff-b976-853c0fd45972"><a
+                                href="https://www.reddit.com/r/explainlikeimfive/" target="_blank"><span
+                                    style="font-size: 12pt; color: rgb(17, 85, 204); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; text-decoration-line: underline; text-decoration-skip-ink: none; vertical-align: baseline;">Reddit forum</span></a></span> or entered in <a
+                                    href="https://www.google.com/" target="_blank"><span
+                                        style="font-size: 12pt; color: rgb(17, 85, 204); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; text-decoration-line: underline; text-decoration-skip-ink: none; vertical-align: baseline;">Google</span></a>, and two answer paragraphs. You will determine the quality of each and the relationship between the two answers.
+                                        </span>
+                </p><span id="docs-internal-guid-366cb1f7-7fff-6cd8-390d-00e7489c6235">
+                    <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"><span
+                            style="font-size: 11pt; font-family: Arial; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;"></span>
+                    </p>
+                    <p><span
+                        style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0);">There are two steps in this task:
+                    </span></p>
+                    <p><span
+                        style="font-size: 12pt; font-family: Arial; font-weight:bold; color: rgb(0, 0, 0);">Step 1:</span>
+                        <span style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0);"> You will determine (1) if the short answer is fluent and (2) if the short answer provides an adequate answer to the question. </span>
+                    </p>
+
+                    <p><span
+                        style="font-size: 12pt; font-family: Arial; font-weight:bold; color: rgb(0, 0, 0);">Step 2:</span>
+                        <span style="font-size: 12pt; font-family: Arial; color: rgb(0, 0, 0);"> You will see a long answer paragraph and determine (1) if the short answer accurately portrays the information in the long answer with regards to the question and (2) if the long answer provides an adequate answer to the question.  </span>
+                    </p>
+            </div>
+        </div>
+        <br>
+
+        <div id='step_1'>
+        <h2>Step 1: Quality of the Short Answer</h2>
+        <hr/>
+        <h3 id='step1_instruction_header'>Instructions</h3>
+        <a data-toggle="collapse" href="#step1_instruction" role="button">
+            Click here to show/hide instruction
+          </a>
+        <br>
+        <br>
+        <div id="step1_instruction" class="collapse in">
+        	<h4 style="font-weight:bold">Fluency</h4>
+            <div>
+                <span style="font-size: 12pt; font-family: Arial;">
+				You will choose from <span style="font-weight:bold"> Yes/No </span>. An answer is not fluent if it contains grammatical errors or if it contains unclear references. Below are some examples of fluent and not fluent answers. </span>
+                    <div>
+                        <br>
+                        <table class="tg" style="table-layout: flexible;">
+                            <colgroup>
+                                <col style="width: 600px">
+                                <col style="width: 100px">
+                                <col style="width: 300px">
+                            </colgroup>
+                            <thead>
+                                <tr style='border-color:black; background-color:#ffe4e1;'>
+                                    <th class="tg-fymr">Example</th>
+                                    <th class="tg-fymr">Fluent</th>
+                                    <th class="tg-fymr">Reasoning</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>  What is the weather usually like in australia?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> The climate varies widely due to its large geographical size , but by far the largest part of Australia is desert or semi-arid . Only the south - east and south - west corners have a temperate climate and moderately fertile soil . The northern part of the country has a tropical climate , varied between tropical rainforests , grasslands and part desert .</span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Yes </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The answer does not refer to anything that isn't explicitly stated. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> how did the mandate of heaven affect chinese history?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> It was used throughout the history of China to legitimize the successful overthrow and installation of new emperors , including non-Han ethnic monarchs such as the Qing dynasty . </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Yes </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> Although "It" is not defined within the answer itself, </span>
+                                            <span style="font-weight:bold;">it is clear that when read with the question, "It" refers to the mandate of heaven. </span> 
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> Why has clock speed on CPU's become almost irrelevant?
+</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> You can speed up work by increasing the rate that the assembly line moves but this can only increase so fast before you start getting errors in the production from the workers (aka electronic components).
+</span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">No </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The reference to the assembly line is unclear given that the initial question was about the CPU. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> Why do people's stomach look bloated when they're malnourished?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> This causes fluid to leave the vessels and enter a cavity like your abdomen. </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">No </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> It is unclear what process "This" refers to and so you have no information on what exactly is causing the fluid to leave the vessels. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                    <br>
+                    <br>
+                    <h4 style="font-weight:bold">Answer Adequacy</h4>
+                    <div>
+                <span style="font-size: 12pt; font-family: Arial;">
+                    You will choose from the below three options for answer adequacy:
+                
+                <ol>
+                  <li><span style='font-weight:bold'>Yes</span>: The paragraph provides an adequate answer to the question.</li>
+                  <li><span style='font-weight:bold'>Partially</span>: The paragraph partially addresses the question.</li>
+                  <li><span style='font-weight:bold'>No</span>: The paragraph doesn’t provide information that addresses the question. </li>
+                </ol>
+
+                Below are examples for each category:
+                 </span>
+                    <div>
+                        <br>
+                        <table class="tg" style="table-layout: flexible;">
+                            <colgroup>
+                                <col style="width: 600px">
+                                <col style="width: 120px">
+                                <col style="width: 280px">
+                            </colgroup>
+                            <thead>
+                                <tr style='border-color:black; background-color:#ffe4e1;'>
+                                    <th class="tg-fymr">Example</th>
+                                    <th class="tg-fymr">Adequate Answer</th>
+                                    <th class="tg-fymr">Reasoning</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>  What is the weather usually like in australia?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> The climate varies widely due to its large geographical size , but by far the largest part of Australia is desert or semi-arid . Only the south - east and south - west corners have a temperate climate and moderately fertile soil . The northern part of the country has a tropical climate , varied between tropical rainforests , grasslands and part desert .</span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Yes </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The answer provide a detailed description of weather throughout various parts of Australia making it an adequate response to the question. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> how did the mandate of heaven affect chinese history?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> It was used throughout the history of China to legitimize the successful overthrow and installation of new emperors , including non-Han ethnic monarchs such as the Qing dynasty . </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Yes </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The answer gives a good description of when the mandate of heaven was used (specifically to overthrow/install new rulers) giving the implication that its role in chinese history was to be used to consolidate power. This makes it an adequate response to the question. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> Why has clock speed on CPU's become almost irrelevant?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> You can speed up work by increasing the rate that the assembly line moves but this can only increase so fast before you start getting errors in the production from the workers (aka electronic components). </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Partially </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> While the metaphor about assembly line is not completely described, you can make an assumption that it is trying to say if you increase the clock speed too much the tradeoff will be that there will be more errors. Thus, this partially answers the question but doesn't completely explain everything. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> Why is butter sometimes measured in cups?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> There was a time before it only cost $10 for a digital scale to keep in your kitchen. In that time, most recipes were made using volume measurements. In addition, the butter churning process ends with setting your butter in a container to solidify again. </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Partially </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> While the short answer gives the idea of what type of measures used to exist and how the butter churning process ends up in solidified form, it doesn't necessarily explain why it is in cups and for that reason it is a partial answer. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> Why do people's stomach look bloated when they're malnourished?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> This causes fluid to leave the vessels and enter a cavity like your abdomen. </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">No </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> Since the answer doesn't describe what "This" is, it makes it unclear on what the actual process is for the stomach to be bloated which is what the question was asking so this is not an adequate response. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> When you're sick and can only breathe out of one nostril, then you turn over and a few minutes later it "falls" and you can breathe out the other, why does this happen?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> The turbinate is responsible for the back-and-forth nasal blockage people experience. </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">No </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The answer brings up what a turbinate is but from the question it is unclear what relevance this has to the question asked as well as how this helps explain the phenomenon making it an inadequate answer. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+        </div>
+        <br>
+        <div id="sample">
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                    <span style="font-size: 17px;"><b>Question:</b> ${question}</span><br>
+                    <span style="font-size: 17px;"><b>Short Answer:</b> ${summary}</span>
+                </div>
+            </div>   
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                    <span style="font-size: 12pt; font-family: Arial;">Is the given short answer fluent? </span> 
+                    <select name='summary_fluent' id='summary_fluent'>
+                        <option value="" selected disabled hidden>Choose here</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+            <div class='panel panel-default'>
+                <div class='panel-body'>
+                    <span style="font-size: 12pt; font-family: Arial;">Does the given short answer have enough information to adequately answer the question? </span> 
+                    <select name='summary_info' id='summary_info'>
+                        <option value="" selected disabled hidden>Choose here</option>
+                        <option value="Yes">Yes</option>
+                        <option value="Partially">Partially</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>  
+        </div>
+    </div>
+    <div id='step_2' style="display:none;">
+    <h2>Step 2: Quality of the Long Answer</h2>
+    <hr/>
+    <h3 id='step2_instruction_header'>Instructions</h3>
+    <a data-toggle="collapse" href="#step2_instruction" role="button">
+            Click here to show/hide instruction
+          </a>
+    <br>
+    <br>
+    <div id='step2_instruction' class="collapse in">
+    	<h4 style="font-weight:bold">Captures Long Answer Intention</h4>
+          <div>
+                <span style="font-size: 12pt; font-family: Arial;">
+                    You will choose from <span style="font-weight:bold"> Yes/No</span>. We would like to understand whether the short answer captures the main idea of the long answer regarding the question. The highlighted sections in the long answer are words/phrases which match exactly with the short answer. <span style="font-weight:bold"> Below are some examples </span>:
+</span>
+                    <div>
+                        <br>
+                        <table class="tg" style="table-layout: flexible;">
+                            <colgroup>
+                                <col style="width: 600px">
+                                <col style="width: 110px">
+                                <col style="width: 290px">
+                            </colgroup>
+                            <thead>
+                                <tr style='border-color:black; background-color:#ffe4e1;'>
+                                    <th class="tg-fymr">Example</th>
+                                    <th class="tg-fymr">Captures Long Answer Intention</th>
+                                    <th class="tg-fymr">Reasoning</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> how did the mandate of heaven affect chinese history?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> It was used throughout the history of China to legitimize the successful overthrow and installation of new emperors , including non-Han ethnic monarchs such as the Qing dynasty . </span>
+                                            <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> The concept of the Mandate of Heaven was first used to support the rule of the kings of the Zhou dynasty ( 1046 -- 256 BCE ) , and legitimize their overthrow of the earlier Shang dynasty ( 1600 -- 1046 BCE ) .  <mark>It was used throughout the history of China to legitimize the successful overthrow and installation of new emperors , including non-Han ethnic monarchs such as the Qing dynasty . </mark>  This concept was also used by monarchs in neighboring countries like Korea and Vietnam . A similar situation prevailed since the establishment of Ahom rule in the Kingdom of Assam of India . </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Yes </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The short answer accurately portrays what the long answer claims the purpose of the mandate of heaven was, which was to legitimize new rulers. The other parts of the long answer provides auxiliary information and hence it is not necessary for answering the question. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> What happens if the ppf is a straight line?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b>  If the shape of the PPF curve is a straight-line , the opportunity cost is constant as production of different goods is changing. </span>
+                                            <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> In the context of a PPF , opportunity cost is directly related to the shape of the curve ( see below ) .  <mark>If the shape of the PPF curve is a straight - line , the opportunity cost is constant as production of different goods is changing .</mark>  But , opportunity cost usually will vary depending on the start and end points .  In the diagram on the right , producing 10 more packets of butter , at a low level of butter production , costs the loss of 5 guns ( shown as a movement from A to B) .  At point C , the economy is already close to its maximum potential butter output .  To produce 10 more packets of butter , 50 guns must be sacrificed ( as with a movement from C to D ) .  The ratio of gains to losses is determined by the marginal rate of transformation . </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Yes </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The short answer accurately portrays what the long answer talks about with relation to the straight-line curve. The long answer has a lot of information about the other ways that the PPF curve may look but with regards to the straight-line (which is what the question is asking) we have the short answer has the same intention as the long answer. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> what is the difference between a janitor and a cleaner?
+</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> A janitor ( American English , Scottish English ) , janitress ( female ) , custodian , porter , cleaner or caretaker is a person who cleans and maintains buildings such as hospitals , schools , and residential accommodation .     
+</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> <mark>A janitor ( American English , Scottish English ) , janitress ( female ) , custodian , porter , cleaner or caretaker is a person who cleans and maintains buildings such as hospitals , schools , and residential accommodation .</mark>  Janitors ' primary responsibility is as a cleaner . In some cases , they will also carry out maintenance and security duties .  A similar position , but usually with more managerial duties and not including cleaning , is occupied by building superintendents in the United States ( and occasionally in Canada ) .  Cleaning is one of the most commonly outsourced services .
+
+</span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">No </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The short answer creates an implication that a janitor is just a cleaner for larger buildings but in reality, the long answer is trying to explain that a janitor also has additional responsibilities in addition to being a cleaner like maintainence and security.  </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> How do animals sense the upcoming earthquake?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Short Answer:</b> Animals can sense an earthquake seconds before humans because many animals sense a primary wave, or "P wave," before the larger, secondary wave that humans feel. Some animals are believed to be able to detect earthquakes hours or days before an earthquake hits.     </span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> <mark>Animals can sense an earthquake seconds before humans because many animals sense a primary wave, or "P wave," before the larger, secondary wave that humans feel. Some animals are believed to be able to detect earthquakes hours or days before an earthquake hits.</mark> We do not know for certain if this is plausible because it is nearly impossible to do a controlled study on animal behavior prior to an earthquake, but there have been many reports of animals fleeing prior to the onset of an earthquake. One theory for why animals may be able to detect earthquakes so early on is that they are more sensitive to the Earth's vibrations than humans are. Another theory is that they can sense electrical changes in the air. Because some animals, like elephants, pass knowledge on from generation, it may also be possible that some older animals who have experienced an earthquake teach their young how to react to certain geographical signs.</span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">No </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> If you only read the short answer you are left with the implication that some animals can detect earthquakes days before it hits but as the long answer explains, this is only a hypothesis that hasn't necessarily been confirmed which makes the short answer misleading. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                    <br>
+                    <br>
+                    <div>
+                <h4 style="font-weight:bold">Answer Adequacy</h4>
+                    <div>
+                <span style="font-size: 12pt; font-family: Arial;">
+                    You will choose from the below three options for answer adequacy:
+                
+                <ol>
+                  <li><span style='font-weight:bold'>Yes</span>: The paragraph provides an adequate answer to the question.</li>
+                  <li><span style='font-weight:bold'>Partially</span>: The paragraph partially addresses the question.</li>
+                  <li><span style='font-weight:bold'>No</span>: The paragraph doesn’t provide information that addresses the question. </li>
+                </ol>
+
+                Below are examples for each category (note these are the same questions/answers as from part 1, the guidelines are the same but instead you are now judging the long answer):
+                 </span>
+                    <div>
+                        <br>
+                        <table class="tg" style="table-layout: flexible;">
+                            <colgroup>
+                                <col style="width: 600px">
+                                <col style="width: 120px">
+                                <col style="width: 280px">
+                            </colgroup>
+                            <thead>
+                                <tr style='border-color:black; background-color:#ffe4e1;'>
+                                    <th class="tg-fymr">Example</th>
+                                    <th class="tg-fymr">Adequate Answer</th>
+                                    <th class="tg-fymr">Reasoning</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b>  What is the weather usually like in australia?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> The climate varies widely due to its large geographical size , but by far the largest part of Australia is desert or semi-arid . Only the south - east and south - west corners have a temperate climate and moderately fertile soil . The northern part of the country has a tropical climate , varied between tropical rainforests , grasslands and part desert .</span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Yes </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The answer provide a detailed description of weather throughout various parts of Australia making it an adequate response to the question. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> how did the mandate of heaven affect chinese history?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> It was used throughout the history of China to legitimize the successful overthrow and installation of new emperors , including non-Han ethnic monarchs such as the Qing dynasty . </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Yes </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The answer gives a good description of when the mandate of heaven was used (specifically to overthrow/install new rulers) giving the implication that its role in chinese history was to be used to consolidate power. This makes it an adequate response to the question. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> Why has clock speed on CPU's become almost irrelevant?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> You can speed up work by increasing the rate that the assembly line moves but this can only increase so fast before you start getting errors in the production from the workers (aka electronic components). </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Partially </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> While the metaphor about assembly line is not completely described, you can make an assumption that it is trying to say if you increase the clock speed too much the tradeoff will be that there will be more errors. Thus, this partially answers the question but doesn't completely explain everything. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> Why is butter sometimes measured in cups?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> There was a time before it only cost $10 for a digital scale to keep in your kitchen. In that time, most recipes were made using volume measurements. In addition, the butter churning process ends with setting your butter in a container to solidify again. </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">Partially </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> While the answer gives the idea of what type of measures used to exist and how the butter churning process ends up in solidified form, it doesn't necessarily explain why it is in cups and for that reason it is a partial answer. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> Why do people's stomach look bloated when they're malnourished?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> This causes fluid to leave the vessels and enter a cavity like your abdomen. </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">No </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> Since the answer doesn't describe what "This" is, it makes it unclear on what the actual process is for the stomach to be bloated which is what the question was asking so this is not an adequate response. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;"><b>Question:</b> When you're sick and can only breathe out of one nostril, then you turn over and a few minutes later it "falls" and you can breathe out the other, why does this happen?</span>
+                                        <br>
+                                        <br>
+                                        <span
+                                            style="font-weight:400;font-style:normal;"><b>Long Answer:</b> The turbinate is responsible for the back-and-forth nasal blockage people experience. </span>
+                                    <td class="tg-0lax"><span
+                                            style="font-weight:400;font-style:normal;text-decoration:none">No </span></td>
+                                    <td class="tg-0lax"> <span
+                                            style="font-weight:400;font-style:normal;"> The answer brings up what a turbinate is but from the question it is unclear what relevance this has to the question asked as well as how this helps explain the phenomenon making it an inadequate answer. </span>
+                                        </span>
+                                        </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+    </div>
+    </div>
+    <br>
+<div id="sample">
+    <div class='panel panel-default'>
+        <div class='panel-body'>
+            <span style="font-size: 17px;"><b>Question:</b> ${question}</span><br>
+            <span style="font-size: 17px;"><b>Short Answer:</b> ${summary}</span><br>
+            <span style="font-size: 17px;"><b>Long Answer:</b> ${answer}</span>
+        </div>
+    </div>   
+    <div class='panel panel-default'>
+        <div class='panel-body'>
+            <span style="font-size: 12pt; font-family: Arial;">Does the short answer capture the main idea of the long answer? </span> 
+            <select name='answer_intention' id='answer_intention'>
+                <option value="" selected disabled hidden>Choose here</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+    </div>
+    <div class='panel panel-default'>
+        <div class='panel-body'>
+            <span style="font-size: 12pt; font-family: Arial;">Does the long answer adequately answer the question? </span> 
+            <select name='answer_info' id='answer_info'>
+                <option value="" selected disabled hidden>Choose here</option>
+                <option value="Yes">Yes</option>
+                <option value="Partially">Partially</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+    </div>
+    <div class='panel panel-default'>
+        <div class='panel-body'>
+            <span style="font-size: 12pt; font-family: Arial;">(Optional) Any comments about any of your answers or any additional thoughts on either of the provided answers? </span> 
+            <br>
+            <br>
+            <input name="comments" id ="comments"></input> 
+                <br><span style="font-weight:bold;
+                font-size:12pt;" class="text-danger">
+        </div>
+    </div>
+</div>
+<br>
+</div>
+
+<button type="button" onclick="goBack()" id="back" class="btn btn-primary" disabled>Back</button>
+<button type="button" onclick="goNext()" id="next" class="btn btn-primary" disabled>Next</button>
+<crowd-button id="submission" form-action="submit" disabled>
+    Submit</crowd-button>
+</crowd-form>
+</body>
+
