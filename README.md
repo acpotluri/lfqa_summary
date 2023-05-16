@@ -1,6 +1,10 @@
 # lfqa_summary
 
-This repo contains data and code for summarizing long-form answers.
+## Introduction
+This is the repository for annotated data and model for this paper: </br>
+
+> Abhilash Potluri, Fangyuan Xu and Eunsol Choi. Concise Answers to Complex Questions:Summarization of Long-Form Answers. In: Proceedings of ACL. 2023.
+> 
 ## Data
 
 All our annotated data is stored in `data/summary_data.json`, each example is a json with the following field:
