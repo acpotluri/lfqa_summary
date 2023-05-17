@@ -3,11 +3,11 @@
 ## Introduction
 This is the repository for annotated data and model for this paper: </br>
 
-> Abhilash Potluri, Fangyuan Xu and Eunsol Choi. Concise Answers to Complex Questions:Summarization of Long-Form Answers. In: Proceedings of ACL. 2023.
+> Abhilash Potluri, Fangyuan Xu and Eunsol Choi. Concise Answers to Complex Questions: Summarization of Long-Form Answers. In: Proceedings of ACL. 2023.
 > 
 ## Data
 
-All our annotated data is stored in `data/summary_data.json`, each example is a json with the following field:
+All our annotated data is stored in the `data` folder, split into a train/dev/test split where each example is a json with the following fields:
 * `type`: The type of the annotation, all data should have `summary` as the value.
 * `dataset`: The dataset this QA pair belongs to, one of [`NQ`, `ELI5`, `Web-GPT`].
 * `q_id`: The question id, same as the original NQ or ELI5 dataset.
@@ -73,3 +73,30 @@ python select_threshold_and_generate_test_pred.py
 --output_test_file_path <path to write thresholded test results>
 ```
 
+### Pegasus
+
+To run the zero-shot Pegasus model run the following command (where model name is the checkpoint from [HuggingFace](https://huggingface.co/models?search=pegasus) you would like to use):
+
+```
+python pegasus.py --batch_size <chosen batch size> --model_name <chosen checkpoint name>
+```
+
+### GPT-3
+
+To run zero-shot with GPT-3 (specifically text-davinci-002), you need to have an OpenAI account and save your API key as the environment variable `OPENAI_API_KEY` and then you can just run:
+
+```
+python gpt_zeroshot.py
+```
+
+## Automatic Evaluation
+
+Each model has its own automatic evaluation script in the `autoEval` folder to compute the ROUGE scores of the predicted summaries (among other statistics like average length).
+
+For example, to evaluate the T5 model output, you would run ```python t5.py``` and then it will also create a formatted csv that you can use as the input to bertScore.py in order to compute the BERTScore of the T5 model outputs.
+
+## Human Evaluation
+
+We also provide the html template (in `humanEval/study_template.html`) of the annotation interface which we used for the human study.
+
+All the collected annotations are provided in `humanEval/results.csv` (worker IDs are hashed to preserve anonymity).

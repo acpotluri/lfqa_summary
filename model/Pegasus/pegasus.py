@@ -18,8 +18,6 @@ def _parse_args():
     :return: the parsed args bundle
     """
     parser = argparse.ArgumentParser(description='trainer.py')
-    parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
-    parser.add_argument('--num_epochs', type=int, default=20, help='number of epochs to train for')
     parser.add_argument('--batch_size', type=int, default=8, help='training batch size; 1 by default and you do not need to batch unless you want to')
     parser.add_argument('--model_name', type=str, default="google/pegasus-cnn_dailymail")
     args = parser.parse_args()
