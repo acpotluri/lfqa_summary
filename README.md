@@ -75,7 +75,7 @@ python select_threshold_and_generate_test_pred.py
 
 ### Pegasus
 
-To run the zero-shot Pegasus model run the following command (where model name is the checkpoint from [HuggingFace](https://huggingface.co/models?search=pegasus) you would like to use):
+To run the zero-shot Pegasus model run the following command from the `model/Pegasus` (where model name is the checkpoint from [HuggingFace](https://huggingface.co/models?search=pegasus) you would like to use):
 
 ```
 python pegasus.py --batch_size <chosen batch size> --model_name <chosen checkpoint name>
@@ -83,7 +83,7 @@ python pegasus.py --batch_size <chosen batch size> --model_name <chosen checkpoi
 
 ### GPT-3
 
-To run zero-shot with GPT-3 (specifically text-davinci-002), you need to have an OpenAI account and save your API key as the environment variable `OPENAI_API_KEY` and then you can just run:
+To run zero-shot with GPT-3 (specifically text-davinci-002), you need to have an OpenAI account and save your API key as the environment variable `OPENAI_API_KEY`. Then navigate to the `model/GPT` folder and then you can just run:
 
 ```
 python gpt_zeroshot.py
