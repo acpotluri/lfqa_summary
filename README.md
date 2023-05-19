@@ -21,6 +21,7 @@ All our annotated data is stored in the `data` folder, split into a train/dev/te
 * `is_summary_2`: List of boolean value indicating whether annotator two selected the corresponding sentence as a summary sentence.
 * `is_summary_3`: List of boolean value indicating whether annotator three selected the corresponding sentence as a summary sentence.
 
+The dataset can also be found on [HuggingFace](https://huggingface.co/datasets/abhilashpotluri/lfqa_summary).
 
 ## Model
 Each model sits in a different directory with its own environment file. Install conda and run the following command:
