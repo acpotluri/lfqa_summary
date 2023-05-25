@@ -40,13 +40,9 @@ conda env create -f environment.yml
 
 **Inference**
 
-Download the model from [link](https://drive.google.com/file/d/1NtI2Xr9N5MO42VEbUl13XAX1NVKhwCqT/view?usp=sharing) and put it under the `t5_finetune/` folder.
-
 `./run_summary_prediction_t5.sh`
 
 ### PreSumm
-
-Download the models from [link](https://drive.google.com/file/d/1u2_roU53mjhtBInVnIV6tMl_aYSNqmZw/view?usp=sharing) and put it under the `PreSumm/` folder.
 
 `cd models/PreSumm/`
 
