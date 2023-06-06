@@ -3,7 +3,7 @@
 ## Introduction
 This is the repository for annotated data and model for this paper: </br>
 
-> Abhilash Potluri, Fangyuan Xu and Eunsol Choi. Concise Answers to Complex Questions: Summarization of Long-Form Answers. In: Proceedings of ACL. 2023.
+> Abhilash Potluri, Fangyuan Xu and Eunsol Choi. [Concise Answers to Complex Questions: Summarization of Long-Form Answers](https://arxiv.org/abs/2305.19271). In: Proceedings of ACL. 2023.
 > 
 ## Data
 
